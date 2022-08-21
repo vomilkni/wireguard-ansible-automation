@@ -1,0 +1,23 @@
+---
+- name: Install wireguard
+  hosts:
+    - "{{ target_host | default('test') }}"
+  tags: packages
+  tasks:
+    - name: Install Wireguard
+      apt:
+        name: wireguard
+        update_cache: yes
+    - name: Install ip
+      apt:
+        name: iproute2
+    - name: Install headers matching kernel
+      apt:
+        pkg:
+        - linux-headers-{{ansible_kernel}}
+    - name: Install iptables
+      apt:
+        name: iptables
+    - name: Install qrencode
+      apt:
+        name: qrencode

@@ -1,0 +1,73 @@
+---
+- name: Create wireguard client
+  hosts:
+    - "{{ target_host | default('test') }}"
+  tags: configuration
+  
+  vars_prompt:
+
+    - name: client_name
+      prompt: Input client name
+      private: no
+  
+  tasks:
+    - name: Check config already exists
+      stat: path=/etc/wireguard/clients/{{client_name}}.conf
+      register: client_config
+
+    - name: Fail if config already registered
+      fail: msg="Client with same name already registered"
+      when: client_config.stat.exists
+
+    - name: Generate private key
+      shell:
+        cmd: wg genkey
+      register: client_privatekey_out
+
+    - name: Generate public key
+      shell:
+        cmd: echo {{client_privatekey_out.stdout}} | wg pubkey
+      register: client_publickey_out
+    
+    - include: gather-facts.yml
+
+    - name: Count peers
+      shell:
+        cmd: grep 'Peer' wg0.conf | wc -l
+        chdir: /etc/wireguard
+      register: peer_count
+
+    - name: Store client vars
+      set_fact:
+        client_privatekey: "{{ client_privatekey_out.stdout }}"
+        client_publickey: "{{ client_publickey_out.stdout  }}"
+        client_ip_addr: "10.0.0.{{ peer_count.stdout|int + 2 }}/32"
+
+    - name: Generate Peer template
+      set_fact:
+        peer_template: "{{ lookup('template', './templates/peer.j2') }}"
+    
+    - name: Creates directory
+      file:
+        path: /etc/wireguard/clients
+        state: directory
+
+    - name: Generate client config
+      template:
+        dest: /etc/wireguard/clients/{{ client_name }}.conf
+        src: templates/client.conf.j2
+
+    - name: Generate qr code
+      shell:
+        cmd: qrencode -t ansiutf8 -r "{{ client_name }}.conf"
+        chdir: /etc/wireguard/clients
+      register: qr_code
+    
+    - name: Add Peer to server config
+      shell:
+        cmd: echo "{{ peer_template }}" >> wg0.conf
+        chdir: /etc/wireguard
+
+    - name: Display qr code
+      debug:
+        msg: "{{ qr_code.stdout.split('\n') }}"

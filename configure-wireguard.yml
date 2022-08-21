@@ -1,0 +1,68 @@
+---
+- name: Configure wireguard
+  hosts:
+    - "{{ target_host | default('test') }}"
+  tags: configuration
+  tasks:
+    - name: Change access rights to 077
+      shell:
+        cmd: umask 077
+        chdir: /etc/wireguard
+    
+    - name: Generate private key
+      shell:
+        cmd: wg genkey > privatekey
+        creates: privatekey
+        chdir: /etc/wireguard
+    
+    - name: Generate public key
+      shell:
+        cmd: wg pubkey < privatekey > publickey
+        creates: publickey
+        chdir: /etc/wireguard
+    
+    - name: Change access rights to 022
+      shell:
+        cmd: umask 022
+        chdir: /etc/wireguard
+    
+    - include: gather-facts.yml
+
+    - name: Print public key
+      debug:
+        msg: Public key {{ server_publickey }}
+    
+    - name: Generate wireguard config
+      template:
+        dest: /etc/wireguard/wg0.conf
+        src: templates/server_wg0.conf.j2
+        mode: '0600'
+        backup: yes
+
+    - name: Confiture ipv4 forwarding
+      ansible.posix.sysctl:
+        name: net.ipv4.ip_forward
+        value: '1'
+        sysctl_set: yes
+        state: present
+        reload: yes
+
+    - name: Confiture ipv6 forwarding
+      ansible.posix.sysctl:
+        name: net.ipv6.conf.all.forwarding
+        value: '1'
+        sysctl_set: yes
+        state: present
+        reload: yes
+
+# TODO: Если используется firewall, то 
+# sudo ufw allow 51820/udp
+# sudo ufw allow OpenSSH
+#
+# sudo ufw disable
+# sudo ufw enable
+# sudo ufw status
+#
+# и в конфигурации wireguard в PostUp и PreDown добавить 
+# PostUp = ufw route allow in on wg0 out on {{ connector | default('eth0') }}
+# PreDown = ufw route delete allow in on wg0 out on {{ connector | default('eth0') }}

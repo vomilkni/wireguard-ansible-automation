@@ -1,0 +1,4 @@
+---
+server-port: 51820
+dns_list: "8.8.8.8, 1.1.1.1"
+connector: ens3

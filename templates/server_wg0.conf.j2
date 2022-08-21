@@ -1,0 +1,7 @@
+# {{ ansible_managed }}
+[Interface]
+Address = 10.0.0.1/24
+PostUp = iptables -t nat -I POSTROUTING -o {{ connector | default('eth0') }} -j MASQUERADE; ip6tables -t nat -I POSTROUTING -o {{ connector | default('eth0') }} -j MASQUERADE
+PostDown = iptables -t nat -D POSTROUTING -o {{ connector | default('eth0') }} -j MASQUERADE; ip6tables -t nat -D POSTROUTING -o {{ connector | default('eth0') }} -j MASQUERADE
+ListenPort = {{ server_port | default('51820') }}
+PrivateKey = {{ server_privatekey }}

@@ -1,0 +1,15 @@
+---
+- name: Load private key
+  slurp:
+    src: "/etc/wireguard/privatekey"
+  register: slurped_privatekey
+
+- name: Load public key
+  slurp:
+    src: "/etc/wireguard/publickey"
+  register: slurped_publickey
+
+- name: Store private and public keys
+  set_fact:
+    server_privatekey: "{{ slurped_privatekey.content | b64decode | trim }}"
+    server_publickey: "{{ slurped_publickey.content | b64decode | trim }}"

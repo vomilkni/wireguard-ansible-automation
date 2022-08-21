@@ -1,0 +1,20 @@
+---
+- name: Stop wireguard
+  hosts:
+    - "{{ target_host | default('test') }}"
+  tags: stop
+  tasks:
+    - name: Stop wireguard
+      shell: wg-quick down wg0
+      args:
+        executable: /bin/bash
+
+- name: Start wireguard
+  hosts:
+    - stands
+  tags: start
+  tasks:
+    - name: Start wireguard
+      shell: wg-quick up wg0
+      args:
+        executable: /bin/bash
