@@ -1,17 +1,27 @@
-# Start from zero step by step:
+# Install and configure Wireguard VPN
 
-## Prerequisites
+Here is a basic set of an ansible playbooks designed for automatic install and configure Wireguard VPN on your server. 
 
-1. Configure credentials to connect to your host in *inventory.yml*
-2. Set host variables in host-vars/*host-name*.yml
+Also playbooks allows you to automatic add new clients. All clients configurations are backuped in /etc/wireguard/clients.
+
+NOTE: Playbooks are designed for ubuntu and checked on ubuntu 20.04.
+
+# Step by step guide:
 
 ## Figure out connector name on server: 
+
 > `ip route list default`
 
 Output will be like 
 > `default via 195.2.79.1 dev `***ens3***` proto static`
 
+
 In these example connector name is ***ens3***. It is used in host_vars then.
+
+## Prerequisites
+
+1. Configure credentials to connect to your host in *inventory.yml*
+2. Set host variables in host-vars/*host-name*.yml
 
 ## Availiable commands
 
