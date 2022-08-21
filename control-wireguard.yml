@@ -11,7 +11,7 @@
 
 - name: Start wireguard
   hosts:
-    - stands
+    - "{{ target_host | default('test') }}"
   tags: start
   tasks:
     - name: Start wireguard
